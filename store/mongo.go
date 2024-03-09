@@ -37,7 +37,7 @@ func NewMongoStore(configURL string, database string) (MongoStore, error) {
 	}
 	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb+srv://ishank:ishank@cluster0.fe2aokt.mongodb.net/?retryWrites=true&w=majority&compressors=snappy,zlib,zstd"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(configURL))
 	if err != nil {
 		panic(err)
 	}
