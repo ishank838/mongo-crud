@@ -14,6 +14,7 @@ var (
 	ErrMongoErrCollectionNotInitialised     = errors.New("collection not  initialised")
 )
 
+// ToDo: Add Options to all interface
 type MongoStore interface {
 	InitCollection(col string) error
 	Insert(ctx context.Context, collection string, document interface{}) (*mongo.InsertOneResult, error)

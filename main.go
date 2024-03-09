@@ -32,16 +32,16 @@ func main() {
 
 	svc := api.NewOfferSvc(storeDeps)
 
-	err = svc.CreateOffer(models.CreateOfferRequest{
-		Title:  "Test Offer",
-		Status: "ACTIVE",
-		Targetting: models.Targetting{
-			CountyCode: []string{"US", "IN"},
-		},
-	})
-	if err != nil {
-		panic(err)
-	}
+	// err = svc.CreateOffer(models.CreateOfferRequest{
+	// 	Title:  "Test Offer",
+	// 	Status: "INACTIVE",
+	// 	Targetting: models.Targetting{
+	// 		CountyCode: []string{"US", "IN"},
+	// 	},
+	// })
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	resp, err := svc.ListOffer(models.ListOffers{
 		Page:  1,

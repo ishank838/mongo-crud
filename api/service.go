@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -27,8 +28,11 @@ func NewOfferSvc(storeDeps store.MongoStore) Offer {
 
 func (o offer) CreateOffer(req models.CreateOfferRequest) error {
 	_, err := o.storeDeps.Insert(context.TODO(), models.CollectionOffersV2, models.OfferDbModel{
-		CreateOfferRequest: req,
-		CreatedAt:          time.Now(),
+		ID:         primitive.NewObjectID(),
+		Title:      req.Title,
+		Status:     req.Status,
+		Targetting: req.Targetting,
+		CreatedAt:  time.Now(),
 	})
 	if err != nil {
 		return err
@@ -37,10 +41,22 @@ func (o offer) CreateOffer(req models.CreateOfferRequest) error {
 }
 
 func (o offer) ListOffer(req models.ListOffers) ([]models.OfferResponse, error) {
-	offset := (req.Page - 1) * req.Limit
-	opts := options.Find().SetLimit(int64(req.Limit)).SetSkip(int64(offset)).SetSort(bson.D{{Key: "created_at", Value: -1}})
+	offset := int64((req.Page - 1) * req.Limit)
+	limit := int64(req.Limit)
+	opts := options.FindOptions{
+		Limit: &limit,
+		Skip:  &offset,
+		Sort:  bson.D{{Key: "created_at", Value: -1}},
+	}
 
-	cursor, err := o.storeDeps.GetMany(context.TODO(), models.CollectionOffersV2, bson.D{}, opts)
+	filter := bson.M{}
+
+	//figure out how to have dynamic filters
+	// if val, ok := req.Filters["status"]; ok {
+	// 	filter["status"] = val
+	// }
+
+	cursor, err := o.storeDeps.GetMany(context.TODO(), models.CollectionOffersV2, filter, &opts)
 	if err != nil {
 		return nil, err
 	}

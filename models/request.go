@@ -13,4 +13,5 @@ type Targetting struct {
 type ListOffers struct {
 	Page  int `json:"page"`
 	Limit int `json:"limit"`
+	//Filters map[string]string `json:"filter"`
 }
