@@ -20,8 +20,10 @@ type MongoStore interface {
 	InsertMany(ctx context.Context, collection string, document []interface{}) (*mongo.InsertManyResult, error)
 	UpdateMany(ctx context.Context, collection string, update interface{}, filter interface{}) (*mongo.UpdateResult, error)
 	Delete(ctx context.Context, collection string, filter interface{}) (*mongo.DeleteResult, error)
-	GetMany(ctx context.Context, collection string, filter interface{}) (*mongo.Cursor, error)
+	GetMany(ctx context.Context, collection string, filter interface{}, opts ...*options.FindOptions) (*mongo.Cursor, error)
 }
+
+var mongoInstance MongoStore
 
 type mongoStore struct {
 	db         *mongo.Database
@@ -29,6 +31,9 @@ type mongoStore struct {
 }
 
 func NewMongoStore(configURL string, database string) (MongoStore, error) {
+	if mongoInstance != nil {
+		return mongoInstance, nil
+	}
 	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
 	defer cancel()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb+srv://ishank:ishank@cluster0.fe2aokt.mongodb.net/?retryWrites=true&w=majority&compressors=snappy,zlib,zstd"))
@@ -38,11 +43,12 @@ func NewMongoStore(configURL string, database string) (MongoStore, error) {
 
 	db := client.Database(database)
 
-	mongo := mongoStore{
-		db: db,
+	mongoInstance := mongoStore{
+		db:         db,
+		colections: make(map[string]*mongo.Collection),
 	}
 
-	return mongo, nil
+	return mongoInstance, nil
 }
 
 func (m mongoStore) InitCollection(col string) error {
@@ -82,11 +88,11 @@ func (m mongoStore) Delete(ctx context.Context, collection string, filter interf
 	return m.colections[collection].DeleteMany(ctx, filter)
 }
 
-func (m mongoStore) GetMany(ctx context.Context, collection string, filter interface{}) (*mongo.Cursor, error) {
+func (m mongoStore) GetMany(ctx context.Context, collection string, filter interface{}, opts ...*options.FindOptions) (*mongo.Cursor, error) {
 	if ok := m.isCollectionExists(collection); !ok {
 		return nil, ErrMongoErrCollectionNotInitialised
 	}
-	return m.colections[collection].Find(ctx, filter)
+	return m.colections[collection].Find(ctx, filter, opts...)
 }
 
 func (m mongoStore) isCollectionExists(collection string) bool {
