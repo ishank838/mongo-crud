@@ -28,11 +28,12 @@ func NewOfferSvc(storeDeps store.MongoStore) Offer {
 
 func (o offer) CreateOffer(req models.CreateOfferRequest) error {
 	_, err := o.storeDeps.Insert(context.TODO(), models.CollectionOffersV2, models.OfferDbModel{
-		ID:         primitive.NewObjectID(),
-		Title:      req.Title,
-		Status:     req.Status,
-		Targetting: req.Targetting,
-		CreatedAt:  time.Now(),
+		ID:          primitive.NewObjectID(),
+		Title:       req.Title,
+		Status:      req.Status,
+		Targetting:  req.Targetting,
+		CreatedAt:   time.Now(),
+		CreatedDate: primitive.NewDateTimeFromTime(time.Now()),
 	})
 	if err != nil {
 		return err

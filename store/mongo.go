@@ -17,11 +17,13 @@ var (
 // ToDo: Add Options to all interface
 type MongoStore interface {
 	InitCollection(col string) error
+	SetIndex(ctx context.Context, collection string, index mongo.IndexModel) (string, error)
 	Insert(ctx context.Context, collection string, document interface{}, opts ...*options.InsertOneOptions) (*mongo.InsertOneResult, error)
 	InsertMany(ctx context.Context, collection string, document []interface{}, opts ...*options.InsertManyOptions) (*mongo.InsertManyResult, error)
 	UpdateMany(ctx context.Context, collection string, update interface{}, filter interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error)
 	Delete(ctx context.Context, collection string, filter interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error)
 	GetMany(ctx context.Context, collection string, filter interface{}, opts ...*options.FindOptions) (*mongo.Cursor, error)
+	ExecTxn(ctx context.Context, f func(ctx mongo.SessionContext) (interface{}, error), opts ...*options.TransactionOptions) error
 }
 
 var mongoInstance MongoStore
@@ -52,11 +54,26 @@ func NewMongoStore(configURL string, database string) (MongoStore, error) {
 	return mongoInstance, nil
 }
 
+func (m mongoStore) SetIndex(ctx context.Context, col string, index mongo.IndexModel) (string, error) {
+	if ok := m.isCollectionExists(col); ok {
+		return "", ErrMongoErrCollectionNotInitialised
+	}
+
+	collection := m.colections[col]
+
+	result, err := collection.Indexes().CreateOne(context.TODO(), index)
+	if err != nil {
+		return "", err
+	}
+	return result, err
+}
+
 func (m mongoStore) InitCollection(col string) error {
 	if ok := m.isCollectionExists(col); ok {
 		return ErrMongoErrCollectionNotInitialised
 	}
 	collection := m.db.Collection(col)
+
 	m.colections[col] = collection
 	return nil
 }
@@ -101,4 +118,17 @@ func (m mongoStore) isCollectionExists(collection string) bool {
 		return true
 	}
 	return false
+}
+
+func (m mongoStore) ExecTxn(ctx context.Context, f func(ctx mongo.SessionContext) (interface{}, error), opts ...*options.TransactionOptions) error {
+	session, err := m.db.Client().StartSession()
+	if err != nil {
+		return err
+	}
+	defer session.EndSession(context.Background())
+	_, err = session.WithTransaction(ctx, f, opts...)
+	if err != nil {
+		return err
+	}
+	return nil
 }
