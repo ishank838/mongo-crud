@@ -17,10 +17,10 @@ var (
 // ToDo: Add Options to all interface
 type MongoStore interface {
 	InitCollection(col string) error
-	Insert(ctx context.Context, collection string, document interface{}) (*mongo.InsertOneResult, error)
-	InsertMany(ctx context.Context, collection string, document []interface{}) (*mongo.InsertManyResult, error)
-	UpdateMany(ctx context.Context, collection string, update interface{}, filter interface{}) (*mongo.UpdateResult, error)
-	Delete(ctx context.Context, collection string, filter interface{}) (*mongo.DeleteResult, error)
+	Insert(ctx context.Context, collection string, document interface{}, opts ...*options.InsertOneOptions) (*mongo.InsertOneResult, error)
+	InsertMany(ctx context.Context, collection string, document []interface{}, opts ...*options.InsertManyOptions) (*mongo.InsertManyResult, error)
+	UpdateMany(ctx context.Context, collection string, update interface{}, filter interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error)
+	Delete(ctx context.Context, collection string, filter interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error)
 	GetMany(ctx context.Context, collection string, filter interface{}, opts ...*options.FindOptions) (*mongo.Cursor, error)
 }
 
@@ -61,32 +61,32 @@ func (m mongoStore) InitCollection(col string) error {
 	return nil
 }
 
-func (m mongoStore) Insert(ctx context.Context, collection string, document interface{}) (*mongo.InsertOneResult, error) {
+func (m mongoStore) Insert(ctx context.Context, collection string, document interface{}, opts ...*options.InsertOneOptions) (*mongo.InsertOneResult, error) {
 	if ok := m.isCollectionExists(collection); !ok {
 		return nil, ErrMongoErrCollectionNotInitialised
 	}
-	return m.colections[collection].InsertOne(ctx, document)
+	return m.colections[collection].InsertOne(ctx, document, opts...)
 }
 
-func (m mongoStore) InsertMany(ctx context.Context, collection string, document []interface{}) (*mongo.InsertManyResult, error) {
+func (m mongoStore) InsertMany(ctx context.Context, collection string, document []interface{}, opts ...*options.InsertManyOptions) (*mongo.InsertManyResult, error) {
 	if ok := m.isCollectionExists(collection); !ok {
 		return nil, ErrMongoErrCollectionNotInitialised
 	}
-	return m.colections[collection].InsertMany(ctx, document)
+	return m.colections[collection].InsertMany(ctx, document, opts...)
 }
 
-func (m mongoStore) UpdateMany(ctx context.Context, collection string, update interface{}, filter interface{}) (*mongo.UpdateResult, error) {
+func (m mongoStore) UpdateMany(ctx context.Context, collection string, update interface{}, filter interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
 	if ok := m.isCollectionExists(collection); !ok {
 		return nil, ErrMongoErrCollectionNotInitialised
 	}
-	return m.colections[collection].UpdateMany(ctx, filter, update)
+	return m.colections[collection].UpdateMany(ctx, filter, update, opts...)
 }
 
-func (m mongoStore) Delete(ctx context.Context, collection string, filter interface{}) (*mongo.DeleteResult, error) {
+func (m mongoStore) Delete(ctx context.Context, collection string, filter interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error) {
 	if ok := m.isCollectionExists(collection); !ok {
 		return nil, ErrMongoErrCollectionNotInitialised
 	}
-	return m.colections[collection].DeleteMany(ctx, filter)
+	return m.colections[collection].DeleteMany(ctx, filter, opts...)
 }
 
 func (m mongoStore) GetMany(ctx context.Context, collection string, filter interface{}, opts ...*options.FindOptions) (*mongo.Cursor, error) {
