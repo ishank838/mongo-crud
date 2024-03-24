@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"mongo-crud/api"
 	"mongo-crud/models"
@@ -67,7 +66,15 @@ func main() {
 		offer.Decode(&res)
 		defer offer.Close(ctx)
 
-		log.Println(fmt.Sprintf("%+v", res))
+		//log.Println(fmt.Sprintf("%+v", res))
+
+		_, err = storeDeps.Delete(ctx, models.CollectionOffersV2, bson.D{{
+			Key:   "_id",
+			Value: result.InsertedID,
+		}})
+		if err != nil {
+			return nil, err
+		}
 
 		return nil, nil
 	})

@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -74,6 +75,17 @@ func (m mongoStore) InitCollection(col string) error {
 	}
 	collection := m.db.Collection(col)
 
+	stream, err := collection.Watch(context.TODO(), mongo.Pipeline{})
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for stream.Next(context.TODO()) {
+			change := stream.Current
+			log.Printf("Event %+v\n", change)
+		}
+	}()
 	m.colections[col] = collection
 	return nil
 }
