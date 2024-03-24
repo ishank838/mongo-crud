@@ -56,7 +56,7 @@ func NewMongoStore(configURL string, database string) (MongoStore, error) {
 }
 
 func (m mongoStore) SetIndex(ctx context.Context, col string, index mongo.IndexModel) (string, error) {
-	if ok := m.isCollectionExists(col); ok {
+	if ok := m.isCollectionExists(col); !ok {
 		return "", ErrMongoErrCollectionNotInitialised
 	}
 
@@ -96,7 +96,9 @@ func (m mongoStore) InitCollection(col string) error {
 			log.Printf("DOcument %+v", event.FullDocument)
 		}
 	}()
+
 	m.colections[col] = collection
+	log.Println("Init COllection", col)
 	return nil
 }
 

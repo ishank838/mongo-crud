@@ -13,4 +13,5 @@ type OfferDbModel struct {
 	Targetting  Targetting         `json:"targetting" bson:"targetting"`
 	CreatedAt   time.Time          `bson:"created_at"`
 	CreatedDate primitive.DateTime `bson:"created_date"`
+	ExpiresAt   time.Time          `bson:"expires_at"`
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"mongo-crud/api"
 	"mongo-crud/models"
@@ -12,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type config struct {
@@ -38,6 +40,17 @@ func main() {
 		panic(err)
 	}
 
+	indResp, err := storeDeps.SetIndex(context.TODO(), models.CollectionOffersV2, mongo.IndexModel{
+		//SetExpireAfterSeconds is the duration after the specified field to have expiry.
+		//For eg. 1 means document expires after 1 second from the specified value.
+		Options: options.Index().SetExpireAfterSeconds(1),
+		Keys:    bson.M{"expires_at": 1},
+	})
+	if err != nil {
+		panic(err)
+	}
+	log.Println("index created", indResp)
+
 	err = storeDeps.ExecTxn(context.TODO(), func(ctx mongo.SessionContext) (interface{}, error) {
 		result, err := storeDeps.Insert(ctx, models.CollectionOffersV2, models.OfferDbModel{
 			ID:     primitive.NewObjectID(),
@@ -47,6 +60,7 @@ func main() {
 				CountyCode: []string{"IN"},
 			},
 			CreatedAt: time.Now(),
+			ExpiresAt: time.Now().Add(2 * time.Second),
 		})
 		if err != nil {
 			return nil, err
@@ -69,15 +83,15 @@ func main() {
 		offer.Decode(&res)
 		defer offer.Close(ctx)
 
-		//log.Println(fmt.Sprintf("%+v", res))
+		log.Println("doc", fmt.Sprintf("%+v", res))
 
-		_, err = storeDeps.Delete(ctx, models.CollectionOffersV2, bson.D{{
-			Key:   "_id",
-			Value: result.InsertedID,
-		}})
-		if err != nil {
-			return nil, err
-		}
+		// _, err = storeDeps.Delete(ctx, models.CollectionOffersV2, bson.D{{
+		// 	Key:   "_id",
+		// 	Value: result.InsertedID,
+		// }})
+		// if err != nil {
+		// 	return nil, err
+		// }
 
 		return nil, nil
 	})
@@ -111,4 +125,8 @@ func main() {
 	for _, offer := range resp {
 		log.Println(offer)
 	}
+
+	//There is a delay in deletion opeartion.
+	//As per Documentation it can take upto 60 sec after  extiry to delete document
+	time.Sleep(2 * time.Minute)
 }
