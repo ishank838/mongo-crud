@@ -75,7 +75,7 @@ func (m mongoStore) InitCollection(col string) error {
 	}
 	collection := m.db.Collection(col)
 
-	stream, err := collection.Watch(context.TODO(), mongo.Pipeline{})
+	stream, err := collection.Watch(context.TODO(), mongo.Pipeline{}, options.ChangeStream().SetFullDocumentBeforeChange(options.WhenAvailable))
 	if err != nil {
 		return err
 	}
@@ -84,6 +84,19 @@ func (m mongoStore) InitCollection(col string) error {
 		for stream.Next(context.TODO()) {
 			change := stream.Current
 			log.Printf("Event %+v\n", change)
+			var event event
+			err = stream.Decode(&event)
+			if err != nil {
+				log.Println("ERROR Events", err)
+				continue
+			}
+			// offers := models.OfferDbModel{}
+			// err = bson.Unmarshal([]byte(event.Document.Data), &offers)
+			// if err != nil {
+			// 	log.Println("ERROR Events", err)
+			// 	continue
+			// }
+			///log.Printf("DOcument %+v", change.)
 		}
 	}()
 	m.colections[col] = collection

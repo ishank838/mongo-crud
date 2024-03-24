@@ -33,7 +33,10 @@ func main() {
 	}
 
 	//Init Collection
-	storeDeps.InitCollection(models.CollectionOffersV2)
+	err = storeDeps.InitCollection(models.CollectionOffersV2)
+	if err != nil {
+		panic(err)
+	}
 
 	err = storeDeps.ExecTxn(context.TODO(), func(ctx mongo.SessionContext) (interface{}, error) {
 		result, err := storeDeps.Insert(ctx, models.CollectionOffersV2, models.OfferDbModel{
@@ -108,4 +111,6 @@ func main() {
 	for _, offer := range resp {
 		log.Println(offer)
 	}
+
+	time.Sleep(10 * time.Second)
 }
