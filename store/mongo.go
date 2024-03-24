@@ -76,6 +76,7 @@ func (m mongoStore) InitCollection(col string) error {
 	collection := m.db.Collection(col)
 
 	//can add filter on pipline
+	//option Required doesn't work as intended
 	stream, err := collection.Watch(context.TODO(), mongo.Pipeline{}, options.ChangeStream().SetFullDocumentBeforeChange(options.WhenAvailable))
 	if err != nil {
 		return err
@@ -91,13 +92,8 @@ func (m mongoStore) InitCollection(col string) error {
 				log.Println("ERROR Events", err)
 				continue
 			}
-			// offers := models.OfferDbModel{}
-			// err = bson.Unmarshal([]byte(event.Document.Data), &offers)
-			// if err != nil {
-			// 	log.Println("ERROR Events", err)
-			// 	continue
-			// }
-			///log.Printf("DOcument %+v", change.)
+
+			log.Printf("DOcument %+v", event.FullDocument)
 		}
 	}()
 	m.colections[col] = collection

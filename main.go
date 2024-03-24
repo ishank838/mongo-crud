@@ -111,6 +111,4 @@ func main() {
 	for _, offer := range resp {
 		log.Println(offer)
 	}
-
-	time.Sleep(10 * time.Second)
 }
