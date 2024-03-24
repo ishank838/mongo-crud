@@ -75,6 +75,7 @@ func (m mongoStore) InitCollection(col string) error {
 	}
 	collection := m.db.Collection(col)
 
+	//can add filter on pipline
 	stream, err := collection.Watch(context.TODO(), mongo.Pipeline{}, options.ChangeStream().SetFullDocumentBeforeChange(options.WhenAvailable))
 	if err != nil {
 		return err
